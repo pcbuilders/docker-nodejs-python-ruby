@@ -69,8 +69,10 @@ def bigo_uncompleted(obj)
   fname = bigo_fname(obj)
   if !bigo_file?(fname)
     sleep 10
-    logger.warn("#{obj['id']} stream not found")
-    bigo_error(obj['id'], "Stream not found")
+    if !bigo_file?(fname)
+      logger.warn("#{obj['id']} stream not found")
+      bigo_error(obj['id'], "Stream not found")
+    end
   else
     fsize         = File.size(bigo_fullpath(fname))
     sleep 10
