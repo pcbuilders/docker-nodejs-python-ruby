@@ -5,5 +5,5 @@
       "category": "uploaded"
     }
   ],
-  replaceConsole: true
+  "replaceConsole": true
 }
