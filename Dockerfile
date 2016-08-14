@@ -11,4 +11,4 @@ RUN apt-get update && apt-get install -y ruby-full && \
     apt-get clean
 WORKDIR /app
 COPY app/* ./
-RUN npm link googleapis log4js minimist && (rake unstreamed > /dev/console 2>&1 &) && (rake uncompleted > /dev/console 2>&1 &) && (rake unuploaded > /dev/console 2>&1 &)
+RUN npm link googleapis log4js minimist
