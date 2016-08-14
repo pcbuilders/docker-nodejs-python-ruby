@@ -3,7 +3,7 @@ task :unstreamed do
   EM.run do
     EM.add_periodic_timer(5) do
       logger.info("Unstreamed START")
-      req   = bigo_req(logger, :do => 'unstreamed')
+      req   = bigo_req(:do => 'unstreamed')
       if req
         req.each do |x|
           bigo_unstreamed(x)
