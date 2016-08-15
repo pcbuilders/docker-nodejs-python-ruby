@@ -42,6 +42,7 @@ def bigo_req(query={})
 end
 
 def bigo_unstreamed(obj)
+  succ = false
   fname  = bigo_fname(obj)
   if !bigo_file?(fname)
     if free_space > 1
@@ -53,15 +54,21 @@ def bigo_unstreamed(obj)
         logger.warn("#{obj['id']} live ended")
         bigo_error(obj['id'], "Live ended")
       else
+        succ = true
         stream_url = "#{uri.scheme}://#{uri.host}:#{uri.port}/list_#{uri.query.split('&').first}.m3u8"
         `nohup livestreamer -Q --yes-run-as-root -o #{bigo_fullpath(fname)} 'hls://#{stream_url}' best > /dev/null 2>&1 &`
         logger.info("livestreamer -Q -o #{bigo_fullpath(fname)} 'hls://#{stream_url}' best")
         logger.info("#{obj['id']} streamed")
-        bigo_req(:do => 'streamed', :id => obj['id'])
       end
     else
       logger.warn("#{obj['id']} Space FULL")
     end
+  else
+    succ = true
+  end
+  
+  if succ
+    bigo_req(:do => 'streamed', :id => obj['id'])
   end
 end
 
@@ -77,7 +84,7 @@ def bigo_uncompleted(obj)
     else
       nstep = true
     end
-  end until (attempt >= 10 || nstep)
+  end until (attempt > 10 || nstep)
   
   if nstep
     fsize         = File.size(bigo_fullpath(fname))
@@ -87,6 +94,9 @@ def bigo_uncompleted(obj)
       logger.info("#{obj['id']} completed")
       bigo_req(:do => 'completed', :id => obj['id'])
     end
+  else
+    logger.warn("#{obj['id']} stream not found")
+    bigo_error(obj['id'], "Stream not found")
   end
 end
 
