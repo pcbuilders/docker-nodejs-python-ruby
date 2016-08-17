@@ -12,7 +12,7 @@ def bigo_volume
 end
 
 def bigo_fname(obj)
-  "bigo_#{obj['bigo_id']}_#{obj['id']}_#{obj['sid']}_#{obj['time']}.mp4"
+  "bigo_#{obj['bigo_id']}_#{obj['id']}_#{obj['sid']}_#{obj['room_id']}_#{obj['time']}.mp4"
 end
 
 def bigo_fullpath(fname)
