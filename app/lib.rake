@@ -46,11 +46,14 @@ def bigo_unstreamed(obj)
   fname  = bigo_fname(obj)
   if !bigo_file?(fname)
     if free_space > 1
-      live_uri = "http://live.bigo.tv/#{obj['sid']}"
-      req = HTTParty.head(live_uri, :headers => {'User-Agent' => ua})
-      uri = req.request.last_uri
+      begin
+        req = HTTParty.head("http://live.bigo.tv/#{obj['sid']}", :follow_redirects => false, :headers => {'User-Agent' => ua})
+      rescue
+        return false
+      end
+      uri = req.headers['location']
 
-      if uri.to_s == live_uri
+      if !uri
         logger.warn("#{obj['id']} live ended")
         bigo_error(obj['id'], "Live ended")
       else
@@ -70,6 +73,7 @@ def bigo_unstreamed(obj)
   if succ
     bigo_req(:do => 'streamed', :id => obj['id'])
   end
+  return nil
 end
 
 def bigo_uncompleted(obj)
@@ -88,7 +92,7 @@ def bigo_uncompleted(obj)
   
   if nstep
     fsize         = File.size(bigo_fullpath(fname))
-    sleep 10
+    sleep 15
     current_size  = File.size(bigo_fullpath(fname))
     if fsize == current_size
       logger.info("#{obj['id']} completed")

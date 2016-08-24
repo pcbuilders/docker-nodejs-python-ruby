@@ -17,7 +17,7 @@ end
 desc 'Get uncompleted shows'
 task :uncompleted do
   EM.run do
-    EM.add_periodic_timer(5) do
+    EM.add_periodic_timer(17) do
       logger.info("Uncompleted START")
       req   = bigo_req(:do => 'uncompleted')
       if req
