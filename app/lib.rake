@@ -46,17 +46,19 @@ def bigo_unstreamed(obj)
   fname  = bigo_fname(obj)
   if !bigo_file?(fname)
     if free_space > 1
+      live_uri = "http://live.bigo.tv/#{obj['sid']}"
       begin
-        req = HTTParty.head("http://live.bigo.tv/#{obj['sid']}", :follow_redirects => false, :headers => {'User-Agent' => ua})
+        req = HTTParty.head(live_uri, :headers => {'User-Agent' => ua})
       rescue
         return false
       end
-      uri = req.headers['location']
+      uri = req.request.last_uri
 
-      if !uri
+      if uri.to_s == live_uri
         logger.warn("#{obj['id']} live ended")
         bigo_error(obj['id'], "Live ended")
       else
+        uri   = URI.parse(uri)
         succ = true
         stream_url = "#{uri.scheme}://#{uri.host}:#{uri.port}/list_#{uri.query.split('&').first}.m3u8"
         `nohup livestreamer -Q --yes-run-as-root -o #{bigo_fullpath(fname)} 'hls://#{stream_url}' best > /dev/null 2>&1 &`
