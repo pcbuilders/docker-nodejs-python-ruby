@@ -12,3 +12,4 @@ RUN apt-get update && apt-get install -y ruby-full && \
 WORKDIR /app
 COPY app/* ./
 RUN npm link googleapis log4js minimist
+ENTRYPOINT ["bash", "/app/run.sh"]
