@@ -58,7 +58,6 @@ def bigo_unstreamed(obj)
         logger.warn("#{obj['id']} live ended")
         bigo_error(obj['id'], "Live ended")
       else
-        uri   = URI.parse(uri)
         succ = true
         stream_url = "#{uri.scheme}://#{uri.host}:#{uri.port}/list_#{uri.query.split('&').first}.m3u8"
         `nohup livestreamer -Q --yes-run-as-root -o #{bigo_fullpath(fname)} 'hls://#{stream_url}' best > /dev/null 2>&1 &`
