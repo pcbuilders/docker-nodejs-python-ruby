@@ -1,9 +1,0 @@
-{
-  "appenders": [
-    {
-      "type": "console",
-      "category": "uploaded"
-    }
-  ],
-  "replaceConsole": true
-}

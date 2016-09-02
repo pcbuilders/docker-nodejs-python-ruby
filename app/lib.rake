@@ -56,7 +56,7 @@ def bigo_unstreamed(obj)
 
       if uri.to_s == live_uri
         logger.warn("#{obj['id']} live ended")
-        bigo_error(obj['id'], "Live ended")
+        bigo_error(obj['id'], "Live ended") rescue nil
       else
         succ = true
         stream_url = "#{uri.scheme}://#{uri.host}:#{uri.port}/list_#{uri.query.split('&').first}.m3u8"
@@ -72,7 +72,7 @@ def bigo_unstreamed(obj)
   end
   
   if succ
-    bigo_req(:do => 'streamed', :id => obj['id'])
+    bigo_req(:do => 'streamed', :id => obj['id']) rescue nil
   end
   return nil
 end
@@ -97,11 +97,11 @@ def bigo_uncompleted(obj)
     current_size  = File.size(bigo_fullpath(fname))
     if fsize == current_size
       logger.info("#{obj['id']} completed")
-      bigo_req(:do => 'completed', :id => obj['id'])
+      bigo_req(:do => 'completed', :id => obj['id']) rescue nil
     end
   else
     logger.warn("#{obj['id']} stream not found")
-    bigo_error(obj['id'], "Stream not found")
+    bigo_error(obj['id'], "Stream not found") rescue nil
   end
 end
 
@@ -109,11 +109,11 @@ def bigo_unuploaded(obj)
   fname = bigo_fname(obj)
   if !bigo_file?(fname)
     logger.warn("#{obj['id']} file not found")
-    bigo_error(obj['id'], "File not found")
+    bigo_error(obj['id'], "File not found") rescue nil
   else
-    `nohup node drive.js --id "#{obj['id']}" --name "#{fname}" > /dev/null 2>&1 &`
+    `nohup node gphoto.js --id "#{obj['id']}" --name "#{fname}" > /dev/null 2>&1 &`
     logger.info("#{obj['id']} uploading")
-    bigo_req(:do => 'uploading', :id => obj['id'])
+    bigo_req(:do => 'uploading', :id => obj['id']) rescue nil
   end
 end
 

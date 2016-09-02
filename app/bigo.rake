@@ -33,7 +33,7 @@ end
 desc 'Get unuploaded shows'
 task :unuploaded do
   EM.run do
-    EM.add_periodic_timer(5) do
+    EM.add_periodic_timer(23) do
       logger.info("Unuploaded START")
       req   = bigo_req(:do => 'unuploaded')
       if req
