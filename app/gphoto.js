@@ -12,12 +12,15 @@ var args = minimist(process.argv.slice(2), {
 var id                      = args.id,
     fname                   = args.name,
     fpath                   = ['/var/dataku', process.env.WNUM, fname].join('/'),
-    cookie                  = process.env.API_COOKIE,
-    x_guploader_client_info = process.env.X_GUPLOADER_CLIENT_ID,
-    effective_id            = process.env.EFFECTIVE_ID,
     api_log_url             = process.env.API_URL,
     api_upload_url          = process.env.API_UPLOAD_URL,
+    secrets                 = JSON.parse(fs.readFileSync('secrets.json', 'utf8')),
     size;
+
+var
+    x_guploader_client_info = 'mechanism=scotty xhr resumable; clientVersion=131213166',
+    effective_id            = secrets.effective_id,
+    cookie                  = secrets.gphoto_cookie;
 
 function post_user_agent() {
   return "Mozilla/5.0 (Windows NT 10.0; rv:44.0) Gecko/20100101 Firefox/44.0"

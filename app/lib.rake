@@ -128,3 +128,8 @@ end
 def logger
   Logger.new(STDOUT)
 end
+
+def save_secrets
+  req = bigo_req(:do => 'secrets')
+  IO.write('secrets.json', req.to_json) if req
+end

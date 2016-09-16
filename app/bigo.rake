@@ -1,3 +1,5 @@
+require 'sys/proctable'
+
 desc 'Get unstreamed shows'
 task :unstreamed do
   EM.run do
@@ -21,8 +23,19 @@ task :uncompleted do
       logger.info("Uncompleted START")
       req   = bigo_req(:do => 'uncompleted')
       if req
-        req.each do |x|
-          bigo_uncompleted(x)
+        processes = Sys::ProcTable.ps.map(&:cmdline).join
+        req.each do |obj|
+          fname = bigo_fname(obj)
+          if !bigo_file?(fname)
+            logger.warn("#{obj['id']} stream not found")
+            bigo_error(obj['id'], "Stream not found") rescue nil
+          else
+            if processes.scan(fname).blank?
+              logger.info("#{obj['id']} completed")
+              bigo_req(:do => 'completed', :id => obj['id']) rescue nil
+            end
+          end
+          #bigo_uncompleted(x)
         end
       end
       logger.info("Uncompleted DONE")
@@ -42,6 +55,17 @@ task :unuploaded do
         end
       end
       logger.info("Unuploaded DONE")
+    end
+  end
+end
+
+desc 'Fetch credentials'
+task :fetch_credentials do
+  if !File.file?('secrets.json')
+    save_secrets
+  else
+    EM.add_periodic_timer(86400) do
+      save_secrets
     end
   end
 end
