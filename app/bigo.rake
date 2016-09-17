@@ -61,9 +61,8 @@ end
 
 desc 'Fetch credentials'
 task :fetch_credentials do
-  if !File.file?('secrets.json')
-    save_secrets
-  else
+  save_secrets
+  EM.run do
     EM.add_periodic_timer(86400) do
       save_secrets
     end
