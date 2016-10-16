@@ -68,7 +68,7 @@ class Streamer
       req.each do |obj|
         @obj  = obj
         completed if done?
-        error('Stream not found') if !running?
+        error('Stream not found') if error?
       end
     end
     @logger.info("Uncompleted DONE")
@@ -115,6 +115,10 @@ class Streamer
 
   def running?
     file_exist? || process_exist?
+  end
+  
+  def error?
+    !file_exist? && !process_exist?
   end
 
   def process_exist?
