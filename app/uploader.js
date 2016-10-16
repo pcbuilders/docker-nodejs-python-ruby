@@ -48,7 +48,7 @@ function postHeadersUpload() {
   });
 }
 
-function post_data(size) {
+function postData(size) {
   return {
     "protocolVersion": "0.8",
     "createSessionRequest": {
