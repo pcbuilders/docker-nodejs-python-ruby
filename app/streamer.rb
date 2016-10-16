@@ -46,7 +46,7 @@ class Streamer
     return false if !enough_space?
     if !running?
       if live = is_live?
-        Process.detach Process.spwan(stream_cmd(URI.parse(live)), [:err, :out] => '/dev/null')
+        Process.detach Process.spawn(stream_cmd(URI.parse(live)), [:err, :out] => '/dev/null')
         streamed
       else
         error if live == nil
