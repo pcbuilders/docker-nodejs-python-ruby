@@ -2,10 +2,10 @@ FROM beevelop/nodejs-python
 
 MAINTAINER Maik Hummel <m@ikhummel.com>
 
-RUN apt-get update && apt-get install -y ruby-full wget && \
+RUN apt-get update && apt-get install -y ruby-full wget nano && \
     pip install livestreamer && \
     npm install -g request minimist && \
-    gem install rake:'~> 0.9.6' httparty activesupport:'4.1.4' eventmachine sys-proctable --no-rdoc --no-ri && \
+    gem install httparty sys-proctable --no-rdoc --no-ri && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
     apt-get autoremove -y && \
     apt-get clean
