@@ -35,7 +35,7 @@ class Streamer
     if req = api_request(:do => 'unstreamed')
       req.each do |obj|
         @obj  = obj
-        proc_unstreameed
+        proc_unstreamed
       end
     end
     @logger.info("Unstreamed DONE")
