@@ -63,7 +63,7 @@ class Streamer
   
   # Get uncompleted objects
   def uncompleted
-    @logger.info("Unstreamed START")
+    @logger.info("Uncompleted START")
     if req = api_request(:do => 'uncompleted')
       req.each do |obj|
         @obj  = obj
@@ -71,7 +71,7 @@ class Streamer
         error('Stream not found') if !running?
       end
     end
-    @logger.info("Unstreamed DONE")
+    @logger.info("Uncompleted DONE")
     return false
   end
 
