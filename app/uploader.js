@@ -133,7 +133,7 @@ function genUploadUrl(size, callback) {
       callback(err || resp.statusCode, null);
       return;
     } else {
-      var uploadUurl = JSON.parse(body).sessionStatus.externalFieldTransfers[0].putInfo.url;
+      var uploadUrl = JSON.parse(body).sessionStatus.externalFieldTransfers[0].putInfo.url;
       if (uploadUrl) {
         uploadFile(uploadUrl, function(e, s) {
           callback(e, s);
