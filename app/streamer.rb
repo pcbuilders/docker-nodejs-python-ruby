@@ -3,6 +3,7 @@ require 'logger'
 require 'sys/proctable'
 
 class Streamer
+
   def initialize
     @logger = Logger.new(STDOUT)
   end
@@ -172,4 +173,5 @@ class Streamer
     end
     return false
   end
+
 end
