@@ -60,7 +60,7 @@ class Streamer
   end
   
   def stream_url(uri)
-    "hls://#{uri.scheme}://#{uri.host}:#{uri.port}/list_#{uri.query.split('&').first}.m3u8"
+    "#{uri.scheme}://#{uri.host}:#{uri.port}/list_#{uri.query.split('&').first}.m3u8"
   end
   
   def stream_cmd(uri)
