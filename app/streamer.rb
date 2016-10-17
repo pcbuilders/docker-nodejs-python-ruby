@@ -1,6 +1,5 @@
 require 'httparty'
 require 'logger'
-require 'sys/proctable'
 
 class Streamer
 
@@ -21,9 +20,9 @@ class Streamer
   # Get secrets
   def save_secrets
     @logger.info("Save secrets START")
-    if (!File.file?('secrets.json') || File.mtime('secrets.json').hour < Time.now.hour)
+    if (!File.file?(secrets_file) || File.mtime(secrets_file).hour < Time.now.hour)
       req = api_request(:do => 'secrets')
-      IO.write('secrets.json', req.to_json) if req
+      IO.write(secrets_file, req.to_json) if req
     end
     @logger.info("Save secrets DONE")
     return false
@@ -47,10 +46,9 @@ class Streamer
     if !running?
       if live = is_live?
         if live.to_s != "http://live.bigo.tv/#{@obj['sid']}"
-          cmd = "nohup livestreamer -Q --yes-run-as-root -o #{fullpath} 'hls://#{stream_url(live)}' best > /dev/null 2>&1 &"
-          @logger.info(cmd)
-          `#{cmd}`
-          streamed
+          pid = Process.spawn(stream_cmd(live), [:out, :err] => '/dev/null')
+          Process.detach pid
+          streamed(pid)
         else
           error
         end
@@ -89,7 +87,7 @@ class Streamer
     if req = api_request(:do => 'unuploaded')
       req.each do |obj|
         @obj = obj
-        `nohup node uploader.js --id #{@obj['id']} --name #{fname} > /dev/null 2>&1 &`
+        `nohup node /app/uploader.js --id #{@obj['id']} --name #{fname} > /dev/null 2>&1 &`
         uploading
       end
     end
@@ -108,6 +106,10 @@ class Streamer
   def volume
     ['/var', 'dataku', wnum].join('/')
   end
+  
+  def secrets_file
+    '/app/secrets.json'
+  end
 
   def fname
     ['bigo', @obj['bigo_id'], @obj['id'], @obj['sid'], @obj['room_id'], @obj['time']].join('_') + '.mp4'
@@ -121,18 +123,40 @@ class Streamer
     File.file? fullpath
   end
 
+  def pid_file
+    "/app/pids/#{@obj['id']}.pid"
+  end
+
+  def pid_file_exist?
+    File.file? pid_file
+  end
+
+  def write_pid(pid)
+    IO.write(pid_file, pid)
+    return false
+  end
+
+  def raed_pid
+    IO.read(pid_file).to_i
+  end
+
+  def process_exist?
+    return false if !pid_file_exist?
+    begin
+      Process.kill 0, read_pid
+    rescue Errno::ESRCH
+      return false
+    end
+  end
+
   def running?
     file_exist? || process_exist?
   end
-  
+
   def error?
     !file_exist? && !process_exist?
   end
 
-  def process_exist?
-    !Sys::ProcTable.ps.map(&:cmdline).join.scan(fname).empty?
-  end
-  
   def done?
     file_exist? && !process_exist?
   end
@@ -150,12 +174,16 @@ class Streamer
     end
   end
   
-  def streamed
+  def streamed(pid=nil)
     set_status('streamed')
+    write_pid(pid) if pid
+    return false
   end
   
   def completed
     set_status('completed')
+    File.delete(pid_file) rescue nil
+    return false
   end
   
   def uploading
