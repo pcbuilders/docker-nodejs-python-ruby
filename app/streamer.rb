@@ -47,7 +47,7 @@ class Streamer
     if !running?
       if live = is_live?
         if live.to_s != "http://live.bigo.tv/#{@obj['sid']}"
-          cmd = "nohup livestreamer -Q --yes-run-as-root -o #{fullpath} 'hls://#{stream_url(URI.parse(live))}' best > /dev/null 2>&1 &"
+          cmd = "nohup livestreamer -Q --yes-run-as-root -o #{fullpath} 'hls://#{stream_url(live)}' best > /dev/null 2>&1 &"
           @logger.info(cmd)
           `#{cmd}`
           streamed
