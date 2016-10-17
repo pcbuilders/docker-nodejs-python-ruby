@@ -47,7 +47,7 @@ class Streamer
     if !running?
       if live = is_live?
         @logger.info(stream_url(URI.parse(live)))
-        `livestreamer -Q --yes-run-as-root -o #{fullpath} 'hls://#{stream_url(URI.parse(live))}' best > /dev/null 2>&1 &`
+        `nohup livestreamer -Q --yes-run-as-root -o #{fullpath} 'hls://#{stream_url(URI.parse(live))}' best > /dev/null 2>&1 &`
         streamed
       else
         error if live == nil
@@ -86,7 +86,7 @@ class Streamer
     if req = api_request(:do => 'unuploaded')
       req.each do |obj|
         @obj = obj
-        `node uploader.js --id #{@obj['id']} --name #{fname} > /dev/null 2>&1 &`
+        `nohup node uploader.js --id #{@obj['id']} --name #{fname} > /dev/null 2>&1 &`
         uploading
       end
     end
