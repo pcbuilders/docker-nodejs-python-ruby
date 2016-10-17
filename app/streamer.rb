@@ -1,5 +1,7 @@
 require 'httparty'
 require 'logger'
+require 'eventmachine'
+require 'em-http-request'
 require 'sys/proctable'
 
 class Streamer
@@ -33,27 +35,33 @@ class Streamer
   def unstreamed
     @logger.info("Unstreamed START")
     if req = api_request(:do => 'unstreamed')
-      req.each do |obj|
-        @obj  = obj
-        proc_unstreamed
-      end
+      iterate_unstreamed(req)
     end
     @logger.info("Unstreamed DONE")
     return false
   end
   
-  def proc_unstreamed
+  def iterate_unstreamed(req)
+    EM.run {
+      m = EM::MultiRequest.new
+      req.each { |obj| m.add obj, EM::HttpRequest.new(live_uri(obj['sid']), :connect_timeout => 20, :innactivity_timeout => 10).get(:redirects => 1) }
+      m.callback {
+        m.responses[:callback].each{ |obj, resp| proc_unstreamed(obj, resp.last_effective_url) }
+        EM.stop
+      }
+    }
+    return false
+  end
+  
+  def proc_unstreamed(obj, uri)
     return false if !enough_space?
+    @obj = obj
     if !running?
-      if live = is_live?
-        if live.to_s != "http://live.bigo.tv/#{@obj['sid']}"
-          cmd = "nohup livestreamer -Q --yes-run-as-root -o #{fullpath} 'hls://#{stream_url(live)}' best > /dev/null 2>&1 &"
-          @logger.info(cmd)
-          `#{cmd}`
-          streamed
-        else
-          error
-        end
+      if uri.to_s != live_uri
+        `nohup livestreamer -Q --yes-run-as-root -o #{fullpath} 'hls://#{stream_url(uri)}' best > /dev/null 2>&1 &`
+        streamed
+      else
+        error
       end
     else
       streamed
@@ -63,10 +71,6 @@ class Streamer
   
   def stream_url(uri)
     "#{uri.scheme}://#{uri.host}:#{uri.port}/list_#{uri.query.split('&').first}.m3u8"
-  end
-  
-  def stream_cmd(uri)
-    ['livestreamer', '-Q', '--yes-run-as-root', '-o', fullpath, "hls://#{uri.scheme}://#{uri.host}:#{uri.port}/list_#{uri.query.split('&').first}.m3u8", 'best'].join(' ')
   end
   
   # Get uncompleted objects
@@ -140,14 +144,9 @@ class Streamer
   def enough_space?
     `df -BG #{volume}`.split[10].to_i >= 3
   end
-
-  def is_live?
-    begin
-      HTTParty.get("http://live.bigo.tv/#{@obj['sid']}", :headers => {'User-Agent' => "Mozilla/5.0 (Linux; Android 4.4.2; Nexus 4 Build/KOT49H) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.114 Mobile Safari/537.36"}, :timeout => 30).request.last_uri
-    rescue => e
-      @logger.warn([@obj['id'], 'check is live error', e].join(': '))
-      return false
-    end
+  
+  def live_uri(sid=nil)
+    "http://live.bigo.tv/#{sid || @obj['sid']}"
   end
   
   def streamed
