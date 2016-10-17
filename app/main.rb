@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-Process.daemon(true)
+#Process.daemon(true)
 
 require_relative '/app/streamer'
 
