@@ -1,8 +1,6 @@
-#!/usr/bin/env ruby
-
 #Process.daemon(true)
 
-require_relative '/app/streamer'
+require_relative 'streamer'
 
 Dir.mkdir('/app/pids') if !Dir.exist?('/app/pids')
 
