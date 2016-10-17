@@ -141,7 +141,7 @@ class Streamer
 
   def is_live?
     begin
-      HTTParty.get("http://live.bigo.tv/#{@obj['sid']}", :headers => {'User-Agent' => "Mozilla/5.0 (Linux; Android 4.4.2; Nexus 4 Build/KOT49H) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.114 Mobile Safari/537.36"}, :follow_redirects => false, :timeout => 30).headers['location']
+      HTTParty.get("http://live.bigo.tv/#{@obj['sid']}", :headers => {'User-Agent' => "Mozilla/5.0 (Linux; Android 4.4.2; Nexus 4 Build/KOT49H) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.114 Mobile Safari/537.36"}, :timeout => 30).headers['location']
     rescue => e
       @logger.warn([@obj['id'], 'check is live error', e].join(': '))
       return false
