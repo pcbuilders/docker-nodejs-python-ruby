@@ -46,12 +46,14 @@ class Streamer
     return false if !enough_space?
     if !running?
       if live = is_live?
-        cmd = "nohup livestreamer -Q --yes-run-as-root -o #{fullpath} 'hls://#{stream_url(URI.parse(live))}' best > /dev/null 2>&1 &"
-        @logger.info(cmd)
-        `#{cmd}`
-        streamed
-      else
-        error if live == nil
+        if live.to_s != "http://live.bigo.tv/#{@obj['sid']}"
+          cmd = "nohup livestreamer -Q --yes-run-as-root -o #{fullpath} 'hls://#{stream_url(URI.parse(live))}' best > /dev/null 2>&1 &"
+          @logger.info(cmd)
+          `#{cmd}`
+          streamed
+        else
+          error
+        end
       end
     else
       streamed
@@ -141,7 +143,7 @@ class Streamer
 
   def is_live?
     begin
-      HTTParty.get("http://live.bigo.tv/#{@obj['sid']}", :headers => {'User-Agent' => "Mozilla/5.0 (Linux; Android 4.4.2; Nexus 4 Build/KOT49H) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.114 Mobile Safari/537.36"}, :timeout => 30).headers['location']
+      HTTParty.get("http://live.bigo.tv/#{@obj['sid']}", :headers => {'User-Agent' => "Mozilla/5.0 (Linux; Android 4.4.2; Nexus 4 Build/KOT49H) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.114 Mobile Safari/537.36"}, :timeout => 30).request.last_uri
     rescue => e
       @logger.warn([@obj['id'], 'check is live error', e].join(': '))
       return false
