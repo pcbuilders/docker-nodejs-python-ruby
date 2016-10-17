@@ -46,7 +46,7 @@ class Streamer
     return false if !enough_space?
     if !running?
       if live = is_live?
-        Process.detach Process.spawn(stream_cmd(URI.parse(live)), [:err, :out] => '/dev/null')
+        `nohup livestreamer -Q --yes-run-as-root -o #{fullpath} 'hls://#{stream_url(URI.parse(live))}' best > /dev/null 2>&1 &`
         streamed
       else
         error if live == nil
@@ -55,6 +55,10 @@ class Streamer
       streamed
     end
     return false
+  end
+  
+  def stream_url(uri)
+    "hls://#{uri.scheme}://#{uri.host}:#{uri.port}/list_#{uri.query.split('&').first}.m3u8"
   end
   
   def stream_cmd(uri)
@@ -81,7 +85,7 @@ class Streamer
     if req = api_request(:do => 'unuploaded')
       req.each do |obj|
         @obj = obj
-        Process.detach Process.spawn(['node', 'uploader.js', '--id', @obj['id'], '--name', fname].join(' '), [:err, :out] => '/dev/null')
+        `node uploader.js --id #{@obj['id']} --name #{fname} > /dev/null 2>&1 &`
         uploading
       end
     end
