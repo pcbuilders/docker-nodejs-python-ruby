@@ -46,7 +46,8 @@ class Streamer
     return false if !enough_space?
     if !running?
       if live = is_live?
-        `nohup livestreamer -Q --yes-run-as-root -o #{fullpath} 'hls://#{stream_url(URI.parse(live))}' best > /dev/null 2>&1 &`
+        @logger.info(stream_url(URI.parse(live)))
+        `livestreamer -Q --yes-run-as-root -o #{fullpath} 'hls://#{stream_url(URI.parse(live))}' best > /dev/null 2>&1 &`
         streamed
       else
         error if live == nil
