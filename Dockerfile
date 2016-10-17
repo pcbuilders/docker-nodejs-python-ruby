@@ -12,4 +12,4 @@ RUN apt-get update && apt-get install -y ruby-full wget nano && \
 WORKDIR /app
 COPY app/* ./
 RUN npm link request minimist
-CMD ['/app/main.rb']
+CMD /app/main.rb
