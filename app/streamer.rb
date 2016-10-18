@@ -186,5 +186,4 @@ class Streamer
     end
     return false
   end
-
 end
