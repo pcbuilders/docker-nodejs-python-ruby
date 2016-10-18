@@ -46,7 +46,7 @@ class Streamer
       m = EM::MultiRequest.new
       req.each { |obj| m.add obj, EM::HttpRequest.new(live_uri(obj['sid']), :connect_timeout => 20, :innactivity_timeout => 10).get(:redirects => 1) }
       m.callback {
-        m.responses[:callback].each { |obj, resp| proc_unstreamed(obj, resp.last_effective_url) }
+        m.responses[:callback].each { |obj, resp| proc_unstreamed(obj, resp.last_effective_url) if !!(resp.response.to_s =~ /uid failed/) && !resp.response.to_s.empty? }
         EM.stop
       }
     }
