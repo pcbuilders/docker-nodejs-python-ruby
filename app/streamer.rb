@@ -35,7 +35,7 @@ class Streamer
   def unstreamed
     @logger.info("Unstreamed START")
     if req = api_request(:do => 'unstreamed')
-      iterate_unstreamed(req)
+      iterate_unstreamed(req) if !req.empty?
     end
     @logger.info("Unstreamed DONE")
     return false
