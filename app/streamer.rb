@@ -42,6 +42,7 @@ class Streamer
   end
   
   def iterate_unstreamed(req)
+    req += req.map{|x| x.merge('dummy' => true)}
     EM.run {
       m = EM::MultiRequest.new
       req.each { |obj| m.add obj, EM::HttpRequest.new(live_uri(obj['sid']), :connect_timeout => 20, :innactivity_timeout => 10).get(:redirects => 1) }
