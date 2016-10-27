@@ -1,7 +1,7 @@
 require 'httparty'
 require 'logger'
-#require 'eventmachine'
-#require 'em-http-request'
+require 'eventmachine'
+require 'em-http-request'
 require 'sys/proctable'
 
 class Streamer
@@ -41,33 +41,32 @@ class Streamer
   
   def iterate_unstreamed(req)
     return false if !enough_space?
-    req.each do |obj|
-      @obj = obj
-      proc_unstreamed
-    end
-    #req.each_slice(2) do |req2|
-    #  EM.run {
-    #    m = EM::MultiRequest.new
-    #    req2.each { |obj| m.add obj, EM::HttpRequest.new(live_uri(obj['sid']), :connect_timeout => 20, :innactivity_timeout => 10).get(:redirects => 1) }
-    #    m.callback {
-    #      m.responses[:callback].each { |obj, resp| proc_unstreamed(obj, resp.last_effective_url) if !(resp.response.to_s =~ /uid failed/) && !resp.response.to_s.empty? }
-    #      EM.stop
-    #    }
-    #  }
+    #req.each do |obj|
+    #  @obj = obj
+    #  proc_unstreamed
     #end
+    req.each_slice(3) do |req2|
+      EM.run {
+        m = EM::MultiRequest.new
+        req2.each { |obj| m.add obj, EM::HttpRequest.new(live_uri(obj['sid']), :connect_timeout => 20, :innactivity_timeout => 10).get(:redirects => 1) }
+        m.callback {
+          m.responses[:callback].each { |obj, resp| proc_unstreamed(obj, resp.last_effective_url) if !(resp.response.to_s =~ /uid failed/) && !resp.response.to_s.empty? }
+          EM.stop
+        }
+      }
+    end
     return false
   end
   
-  def proc_unstreamed
+  def proc_unstreamed(obj, uri)
     return false if !enough_space?
+    @obj = obj
     if !running?
-      if uri = get_live_uri
-        if uri.to_s != @live_uri
-          `nohup livestreamer -Q --yes-run-as-root -o #{fullpath} 'hls://#{stream_url(uri)}' best > /dev/null 2>&1 &`
-          streamed
-        else
-          error
-        end
+      if uri.path != "/#{@obj['sid']}"
+        `nohup livestreamer -Q --yes-run-as-root -o #{fullpath} 'hls://#{stream_url(uri)}' best > /dev/null 2>&1 &`
+        streamed
+      else
+        error
       end
     else
       streamed
@@ -152,11 +151,11 @@ class Streamer
   end
   
   def live_uri(sid=nil)
-    @live_uri = "http://#{ip}/#{sid || @obj['sid']}"
+    "http://#{ip}/#{sid || @obj['sid']}"
   end
   
   def ip
-    %w(52.48.27.197 52.52.32.178 139.5.108.116 45.124.252.89).sample
+    %w(52.48.27.197 139.5.108.116 45.124.252.89).sample
   end
   
   def get_live_uri
