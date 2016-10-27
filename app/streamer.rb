@@ -23,10 +23,8 @@ class Streamer
   # Get secrets
   def save_secrets
     @logger.info("Save secrets START")
-    if (!File.file?('secrets.json') || File.mtime('secrets.json').hour < Time.now.hour)
-      req = api_request(:do => 'secrets')
-      IO.write('secrets.json', req.to_json) if req
-    end
+    req = api_request(:do => 'secrets')
+    IO.write('secrets.json', req.to_json) if req
     @logger.info("Save secrets DONE")
     return false
   end
@@ -42,15 +40,17 @@ class Streamer
   end
   
   def iterate_unstreamed(req)
-    req += req.map{|x| x.merge('dummy' => true)}
-    EM.run {
-      m = EM::MultiRequest.new
-      req.each { |obj| m.add obj, EM::HttpRequest.new(live_uri(obj['sid']), :connect_timeout => 20, :innactivity_timeout => 10).get(:redirects => 1) }
-      m.callback {
-        m.responses[:callback].each { |obj, resp| proc_unstreamed(obj, resp.last_effective_url) if !(resp.response.to_s =~ /uid failed/) && !resp.response.to_s.empty? }
-        EM.stop
+    return false if !enough_space?
+    req.each_slice(5) do |req2|
+      EM.run {
+        m = EM::MultiRequest.new
+        req2.each { |obj| m.add obj, EM::HttpRequest.new(live_uri(obj['sid']), :connect_timeout => 20, :innactivity_timeout => 10).get(:redirects => 1) }
+        m.callback {
+          m.responses[:callback].each { |obj, resp| proc_unstreamed(obj, resp.last_effective_url) if !(resp.response.to_s =~ /uid failed/) && !resp.response.to_s.empty? }
+          EM.stop
+        }
       }
-    }
+    end
     return false
   end
   
@@ -147,7 +147,7 @@ class Streamer
   end
   
   def live_uri(sid=nil)
-    "http://live.bigo.tv/#{sid || @obj['sid']}"
+    "http://bgprx.abylina.com/#{sid || @obj['sid']}"
   end
   
   def streamed
