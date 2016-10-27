@@ -62,7 +62,7 @@ class Streamer
     return false if !enough_space?
     if !running?
       if uri = get_live_uri
-        if uri.to_s != live_uri
+        if uri.to_s != @live_uri
           `nohup livestreamer -Q --yes-run-as-root -o #{fullpath} 'hls://#{stream_url(uri)}' best > /dev/null 2>&1 &`
           streamed
         else
@@ -152,7 +152,7 @@ class Streamer
   end
   
   def live_uri(sid=nil)
-    "http://#{ip}/#{sid || @obj['sid']}"
+    @live_uri = "http://#{ip}/#{sid || @obj['sid']}"
   end
   
   def ip
