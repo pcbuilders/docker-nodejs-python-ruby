@@ -152,7 +152,11 @@ class Streamer
   end
   
   def live_uri(sid=nil)
-    "http://web.live.bigo.sg/#{sid || @obj['sid']}"
+    "#{ip}/#{sid || @obj['sid']}"
+  end
+  
+  def ip
+    %w(52.48.27.197 52.52.32.178 139.5.108.116 45.124.252.89).sample
   end
   
   def get_live_uri
