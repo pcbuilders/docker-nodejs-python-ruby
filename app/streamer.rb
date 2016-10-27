@@ -1,7 +1,7 @@
 require 'httparty'
 require 'logger'
-require 'eventmachine'
-require 'em-http-request'
+#require 'eventmachine'
+#require 'em-http-request'
 require 'sys/proctable'
 
 class Streamer
@@ -41,28 +41,33 @@ class Streamer
   
   def iterate_unstreamed(req)
     return false if !enough_space?
-    req.each_slice(5) do |req2|
-      EM.run {
-        m = EM::MultiRequest.new
-        req2.each { |obj| m.add obj, EM::HttpRequest.new(live_uri(obj['sid']), :connect_timeout => 20, :innactivity_timeout => 10).get(:redirects => 1) }
-        m.callback {
-          m.responses[:callback].each { |obj, resp| proc_unstreamed(obj, resp.last_effective_url) if !(resp.response.to_s =~ /uid failed/) && !resp.response.to_s.empty? }
-          EM.stop
-        }
-      }
+    req.each do |r|
+      proc_unstreamed(obj)
     end
+    #req.each_slice(2) do |req2|
+    #  EM.run {
+    #    m = EM::MultiRequest.new
+    #    req2.each { |obj| m.add obj, EM::HttpRequest.new(live_uri(obj['sid']), :connect_timeout => 20, :innactivity_timeout => 10).get(:redirects => 1) }
+    #    m.callback {
+    #      m.responses[:callback].each { |obj, resp| proc_unstreamed(obj, resp.last_effective_url) if !(resp.response.to_s =~ /uid failed/) && !resp.response.to_s.empty? }
+    #      EM.stop
+    #    }
+    #  }
+    #end
     return false
   end
   
-  def proc_unstreamed(obj, uri)
+  def proc_unstreamed(obj)
     return false if !enough_space?
     @obj = obj
     if !running?
-      if uri.to_s != live_uri
-        `nohup livestreamer -Q --yes-run-as-root -o #{fullpath} 'hls://#{stream_url(uri)}' best > /dev/null 2>&1 &`
-        streamed
-      else
-        error
+      if uri = get_live_uri
+        if uri.to_s != live_uri
+          `nohup livestreamer -Q --yes-run-as-root -o #{fullpath} 'hls://#{stream_url(uri)}' best > /dev/null 2>&1 &`
+          streamed
+        else
+          error
+        end
       end
     else
       streamed
@@ -147,7 +152,16 @@ class Streamer
   end
   
   def live_uri(sid=nil)
-    "http://bgprx2.abylina.com/#{sid || @obj['sid']}"
+    "http://web.live.bigo.sg/#{sid || @obj['sid']}"
+  end
+  
+  def get_live_uri
+    begin
+      return HTTParty.get(live_uri, :headers => {'User-Agent' => "Twitterbot/1.0"}, :timeout => 30).request.last_uri
+    rescue => e
+      @logger.warn([@obj['id'], e].join(': '))
+    end
+    return false
   end
   
   def streamed
