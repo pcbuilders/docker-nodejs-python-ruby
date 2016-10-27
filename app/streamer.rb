@@ -45,7 +45,7 @@ class Streamer
     #  @obj = obj
     #  proc_unstreamed
     #end
-    req.each_slice(3) do |req2|
+    req.each_slice(5) do |req2|
       EM.run {
         m = EM::MultiRequest.new
         req2.each { |obj| m.add obj, EM::HttpRequest.new(live_uri(obj['sid']), :connect_timeout => 20, :innactivity_timeout => 10).get(:redirects => 1) }
