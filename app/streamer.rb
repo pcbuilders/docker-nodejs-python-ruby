@@ -41,8 +41,9 @@ class Streamer
   
   def iterate_unstreamed(req)
     return false if !enough_space?
-    req.each do |r|
-      proc_unstreamed(obj)
+    req.each do |obj|
+      @obj = obj
+      proc_unstreamed
     end
     #req.each_slice(2) do |req2|
     #  EM.run {
@@ -57,9 +58,8 @@ class Streamer
     return false
   end
   
-  def proc_unstreamed(obj)
+  def proc_unstreamed
     return false if !enough_space?
-    @obj = obj
     if !running?
       if uri = get_live_uri
         if uri.to_s != live_uri
