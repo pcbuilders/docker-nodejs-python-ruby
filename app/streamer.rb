@@ -152,7 +152,7 @@ class Streamer
   end
   
   def live_uri(sid=nil)
-    "#{ip}/#{sid || @obj['sid']}"
+    "http://#{ip}/#{sid || @obj['sid']}"
   end
   
   def ip
