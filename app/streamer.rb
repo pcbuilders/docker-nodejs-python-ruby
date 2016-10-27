@@ -147,7 +147,7 @@ class Streamer
   end
   
   def live_uri(sid=nil)
-    "http://bgprx.abylina.com/#{sid || @obj['sid']}"
+    "http://bgprx2.abylina.com/#{sid || @obj['sid']}"
   end
   
   def streamed
