@@ -63,7 +63,7 @@ class Streamer
     @obj = obj
     if !running?
       if uri.path != "/#{@obj['sid']}"
-        `nohup livestreamer -Q --yes-run-as-root -o #{fullpath} 'hls://#{stream_url(uri)}' best > /dev/null 2>&1 &`
+        `nohup livestreamer -Q --yes-run-as-root -o #{fullpath} --hls-timeout 300 --hls-segment-timeout 60 'hls://#{stream_url(uri)}' best > /dev/null 2>&1 &`
         streamed
       else
         error
