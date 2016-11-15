@@ -1,5 +1,5 @@
-require_relative 'streamer'
+require_relative 'bigo_streamer'
 loop do
-  Streamer.new.start!
+  BigoStreamer.new.start!
   sleep 5
 end

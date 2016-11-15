@@ -4,7 +4,7 @@ require 'eventmachine'
 require 'em-http-request'
 require 'sys/proctable'
 
-class Streamer
+class BigoStreamer
 
   def initialize
     @logger = Logger.new(STDOUT)
@@ -48,9 +48,9 @@ class Streamer
     req.each_slice(5) do |req2|
       EM.run {
         m = EM::MultiRequest.new
-        req2.each { |obj| m.add obj, EM::HttpRequest.new(live_uri(obj['sid']), :connect_timeout => 20, :innactivity_timeout => 10).get(:redirects => 1) }
+        req2.each { |obj| m.add obj, EM::HttpRequest.new(live_uri(obj['sid']), :connect_timeout => 20, :innactivity_timeout => 10).get(:redirects => 1, :head => {"User-Agent" => user_agent}) }
         m.callback {
-          m.responses[:callback].each { |obj, resp| proc_unstreamed(obj, resp.last_effective_url) if !(resp.response.to_s =~ /uid failed/) && !resp.response.to_s.empty? }
+          m.responses[:callback].each { |obj, resp| proc_unstreamed(obj, resp) if !(resp.response.to_s =~ /uid failed/) && !resp.response.to_s.empty? }
           EM.stop
         }
       }
@@ -58,12 +58,12 @@ class Streamer
     return false
   end
   
-  def proc_unstreamed(obj, uri)
+  def proc_unstreamed(obj, resp)
     return false if !enough_space?
     @obj = obj
     if !running?
-      if uri.path != "/#{@obj['sid']}"
-        `nohup livestreamer -Q --yes-run-as-root -o #{fullpath} --hls-timeout 300 --hls-segment-timeout 60 'hls://#{stream_url(uri)}' best > /dev/null 2>&1 &`
+      if m3u8_uri = resp.response.to_s.match(/list_(\d{10,})_(\d{10,})\.m3u8/i)
+        `nohup livestreamer -Q --yes-run-as-root -o #{fullpath} --hls-timeout 300 --hls-segment-timeout 60 --http-header "Referer=#{resp.last_effective_url.to_s}" 'hls://#{stream_url(resp.last_effective_url, m3u8_uri.to_s)}' best > /dev/null 2>&1 &`
         streamed
       else
         error
@@ -74,8 +74,8 @@ class Streamer
     return false
   end
   
-  def stream_url(uri)
-    "#{uri.scheme}://#{uri.host}:#{uri.port}/list_#{uri.query.split('&').first}.m3u8"
+  def stream_url(uri, m3u8_uri)
+    "#{uri.scheme}://#{uri.host}:#{uri.port}/#{m3u8_uri}"
   end
   
   # Get uncompleted objects
@@ -158,13 +158,8 @@ class Streamer
     %w(52.48.27.197 139.5.108.116 45.124.252.89).sample
   end
   
-  def get_live_uri
-    begin
-      return HTTParty.get(live_uri, :headers => {'User-Agent' => "Twitterbot/1.0"}, :timeout => 30).request.last_uri
-    rescue => e
-      @logger.warn([@obj['id'], e].join(': '))
-    end
-    return false
+  def user_agent
+    "Mozilla/5.0 (Android; Mobile; rv:29.0) Gecko/29.0 Firefox/29.0"
   end
   
   def streamed
