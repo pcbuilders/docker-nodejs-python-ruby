@@ -48,7 +48,7 @@ class BigoStreamer
     req.each_slice(5) do |req2|
       EM.run {
         m = EM::MultiRequest.new
-        req2.each { |obj| m.add obj, EM::HttpRequest.new(live_uri(obj['sid']), :connect_timeout => 60, :innactivity_timeout => 60).get(:redirects => 1, :head => {"User-Agent" => user_agent}) }
+        req2.each { |obj| m.add obj, EM::HttpRequest.new(live_uri(obj['sid']), :connect_timeout => 60, :inactivity_timeout => 60).get(:redirects => 1, :head => {"User-Agent" => user_agent}) }
         m.callback {
           m.responses[:callback].each { |obj, resp| proc_unstreamed(obj, resp) if !(resp.response.to_s =~ /uid failed/) && !resp.response.to_s.empty? }
           EM.stop
