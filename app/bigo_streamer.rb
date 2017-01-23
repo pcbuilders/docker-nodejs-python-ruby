@@ -41,10 +41,6 @@ class BigoStreamer
   
   def iterate_unstreamed(req)
     return false if !enough_space?
-    #req.each do |obj|
-    #  @obj = obj
-    #  proc_unstreamed
-    #end
     req.each_slice(5) do |req2|
       EM.run {
         m = EM::MultiRequest.new
