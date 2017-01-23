@@ -155,7 +155,7 @@ class BigoStreamer
   end
   
   def ip
-    %w(52.48.27.197 139.5.108.116 45.124.252.89).sample
+    "bgprx.abylina.com"
   end
   
   def user_agent
